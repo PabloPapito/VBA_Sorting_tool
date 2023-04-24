@@ -1,0 +1,118 @@
+Sub Clear()
+
+'Clear&Prepare --------------------
+
+    Worksheets("Data").Select
+    Worksheets("Data").range("A1:Z60000").Select
+    Selection.ClearContents
+    Worksheets("Data").range("A1:Z60000").Select
+    Selection.ClearContents
+
+    Worksheets("XXXX").Select
+    Worksheets("XXXX").range("A1:Z60000").Select
+    Selection.ClearContents
+
+End Sub
+
+' SORT TOOL --------------------
+
+Sub Sort()
+
+    Sheets("Data").Select
+    range("A1:Z1").Select
+    Selection.AutoFilter
+    
+'XXXX
+    Sheets("Data").Select
+    range("A1").Select
+    ActiveSheet.range("$A$1:$Z$50000").AutoFilter Field:=1, Criteria1:="XXXX"
+    range("A1").Select
+    range(Selection, Selection.End(xlDown)).Select
+    range(Selection, Selection.End(xlToRight)).Select
+    Selection.Copy
+    Sheets("XXXX").Select
+    range("A1").Select
+    Selection.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    range("Z1").Value = "Duration_h"
+    range("AA1").Value = "Duration_cut_off_h"
+    range("Z2:Z1000").Formula = "=(D2/60)/60"
+    range("AA2:AA1000").Formula = "=(E2/60)/60"
+    range("Z1", range("Z1").End(xlDown)).Copy
+    range("D1").PasteSpecial xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    range("AA1", range("AA1").End(xlDown)).Copy
+    range("E1").PasteSpecial xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    range("Z1:Z1000").Clear
+    range("AA1:AA1000").Clear
+    range("AB1").Value = "TOTAL Duration_h"
+    range("AB2").Formula = "=SUM(D:D)"
+    range("AB1:AB2").Font.Bold = True
+    range("AB1:AB2").Font.Color = vbRed
+    range("AC1").Value = "TOTAL Duration_cut_off_h"
+    range("AC2").Formula = "=SUM(E:E)"
+    range("AC1:AC2").Font.Bold = True
+    range("AC1:AC2").Font.Color = vbRed
+
+End Sub
+
+' Save data --------------------
+
+Sub SaveMacro()
+       
+    XXXX_Save_Macro
+
+End Sub
+
+Sub XXXX_Save_Macro()
+
+    Application.DisplayAlerts = False
+    Dim FName           As String
+    Dim FPath           As String
+    Dim NewBook         As Workbook
+ 
+    FPath = ThisWorkbook.Path
+    FName = "XXXX_data.xlsx"
+ 
+    Set NewBook = Workbooks.Add
+ 
+    ThisWorkbook.Sheets"XXXX").Copy Before:=NewBook.Sheets(1)
+    NewBook.SaveAs Filename:=FPath & "\" & FName
+    Application.DisplayAlerts = True
+    ActiveWorkbook.Close savechanges:=True
+    
+End Sub
+
+' Send function --------------------
+
+Function sendTo(varFC As String, rangeMailingList As String)
+
+    Dim varDate As String
+    Dim MyMessage As Object, MyOutApp As Object
+    Dim SavePath As String
+
+    varDate = Worksheets("General").range("A1").Value
+    
+    
+    Set MyOutApp = CreateObject("Outlook.Application")
+    Set MyMessage = MyOutApp.CreateItem(0)
+    With MyMessage
+        .GetInspector
+        .to = Sheets("Mailing_lists").range(rangeMailingList)
+        .Subject = "Daily Data_" & varDate & " " & varFC
+        .Attachments.Add ThisWorkbook.Path & "\" & varFC & "_.xlsx"
+        .HTMLBody = "Hi," & "<br><br>" & "Please see daily data for " & varDate & " in excel spreadsheet attached." & "<br><br>" & "<u>FAQ:</u>" & "<br>" & "Attached excel spreadsheet does not contain any data, is this unusual?" & "<ul><li>No, missing data means that data was not engaged for specified time period. Data still being sent in order to keep communication thread.</li></ul>" & .HTMLBody
+        .Display
+    End With
+    Set MyOutApp = Nothing
+    Set MyMessage = Nothing
+    Application.ScreenUpdating = False
+    
+End Function
+
+Sub Send_FR()
+
+    sendTo "XXXX", "C2"
+   
+End Sub
